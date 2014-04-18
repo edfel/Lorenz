@@ -32,6 +32,12 @@
 		td {		 
 			border: 1px 1px 0px 0px solid black;
 		}
+		
+		.captionList {
+			 list-style-type: none;
+			font-family: xkcd-Regular;
+			font-size: 15px;
+		}
 	</style>
 </head>
 <body>
@@ -39,14 +45,21 @@
 
 		$(function(){ 
 		
-			$("#data").val(localStorage.tracks);
+			$("#data").val(localStorage.memory);
 			
 			document.getElementById('click_me').onclick = 
 			function () { 
+			// read data
 				data=$("#data").val();
-				localStorage.tracks=data;
-				tracks=JSON.parse(data); 
-				 
+				localStorage.memory=data;
+				
+				imgStart=data.indexOf('"""images:"""');
+				
+				tracks=JSON.parse(data.substring(0,imgStart)); 
+				
+				allImages=JSON.parse(data.substring(imgStart+13)); 
+				
+			// build up story table
 				var table = $('<table></table>').addClass('bigTable');
 			/*	var row = $('<th></th>');
 				var cell = $('<td></td>').text("Depth");
@@ -69,7 +82,10 @@
 							var cellContent=choice;
 							var cell = $('<td></td>').addClass('choice');
 							if (href !="") {
-								var link= $('<a></a>').attr("href","http://www.xkcd.com"+href).text(choice);
+								var link= $('<a></a>')
+									.attr("href","http://www.xkcd.com"+href)
+									.attr("target", "_blank")
+									.text(choice);
 								cell.append(link)
 							}  else {					
 								cell.text(choice);
@@ -81,13 +97,41 @@
 				}	
 
 				$('#tableContainer').empty().append(table);
+				
+				// build up image table
+				table = $('<table></table>').addClass('bigTable');			
+				for (key in allImages){
+					img=allImages[key];
+					var row = $('<tr></tr>').addClass('imgRow');
+					
+					var imgElement= $('<img></img>')
+						.attr("src",img.url)
+						.attr("title","First seen: "+img.firstSeen);
+					
+					var captionElement= $('<ul></ul>').addClass("captionList");
+					
+					$.each(img.captions, function(c) {
+						captionElement.append($('<li></li>').text(this));
+					} );					
+					
+					
+					row.append( $('<td></td>').append(imgElement));
+					row.append( $('<td></td>').append(captionElement));
+					//row.append( $('<td></td>').text(img.url));
+					
+					
+					
+					table.append(row);
+				}	
+
+				$('#tableContainer').append(table);
 			};
 		});
 	</script>
 
 	<div>
 		<p> Copy your export data here. Then, <a href="#" id="click_me">Click Me!</a> </p>
-		<textarea id="data" rows=20 cols=80>
+		<textarea id="data" rows=10 cols=80>
 		</textarea>
 	</div>
 

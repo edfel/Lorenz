@@ -22,7 +22,7 @@
 /***** parameters: you can safely change this part   ***/
 
 //pathDelay: time for each panel (ms)
-pathDelay=3000;
+pathDelay=2000;
 
 //rollbackDelay: determine speed of "rollback" between two runs (ms)
 rollbackDelay=100;
@@ -57,11 +57,20 @@ function sortByKey(array) {
 // lookup local storage for memorized tracks
 
 function load() {
+    timerIDs=[];
+              
+              
 	data=localStorage.tracks;
 	if (data==undefined || reset) {
 	 tracks=[];
 	} else {
 	 tracks=JSON.parse(data);
+	}
+    data=localStorage.images;
+	if (data==undefined || reset) {
+      allImages=new function() {};
+	} else {
+	   allImages=JSON.parse(data);
 	}
 }
              
@@ -70,13 +79,18 @@ function save() {
     tracks.push(thisTrack);
     data=JSON.stringify(sortByKey(tracks));
     localStorage.tracks = data;
+    
+    data=JSON.stringify(allImages);
+    localStorage.images = data;
 }
 
              
 // stops the last "setInterval". intervalID is a global variable
 function stop() {
-     $('#stopBtn').hide()
-    clearInterval(intervalID);
+    clearInterval(timerIDs.pop());
+    if (timerIDs.length==0) {
+        $('#stopBtn').hide();        
+    }
 }
 
 
@@ -112,10 +126,9 @@ function placeButtons(){
 
      $(anchor).append('<input type="button" id="exportBtn" value="Export">')
      $('#exportBtn').click(function () {
-             text=localStorage.tracks;
+         text=localStorage.tracks + '"""images:"""' + localStorage.images;
              $('#exportTxt').val(text).select();
-           //  text='<br><textarea rows="10" cols="80">'+text+"</textarea>";             
-           //  $('#middleContainer').append(text);
+         
             /* */
           }); 
              
@@ -143,6 +156,7 @@ function rollBack(plusRandomPath) {
        }
         
     }, rollbackDelay);
+    timerIDs.push(intervalID);
 }
      
              
@@ -169,8 +183,12 @@ function randomPath() {
     thisTrack.key="*";
     thisTrack.timeStamp=new Date();
       $('#stopBtn').show();
+                       
     intervalID=setInterval(function() {    
-        //each iteration             
+        //each iteration       
+        image=$("#comic img").last().attr("src");
+        thisTrack.images.push(image);   
+        rememberImg(image);
         n=$(".option-choose").length-$(".option-line-writein").length;
         if (n>0) {
             // n options to choose
@@ -201,6 +219,7 @@ function randomPath() {
         }
         
     }, pathDelay);
+    timerIDs.push(intervalID);
 }
 
 // read permalink
@@ -215,3 +234,27 @@ function getPermalink() {
     
 }
  
+function   rememberImg(image) {
+    i=image.indexOf("comics");
+    key=image.substring(i+7,i+37);
+    img=allImages[key];
+    if (img==undefined) {
+        img= new function(){};
+        img.key=key;
+        img.url=image;
+        img.firstSeen=thisTrack.timeStamp;       
+        
+        img.captions=[];
+        
+    }
+    
+    $(".option-text").each( function(i){
+        caption=this.textContent;
+        if ($.inArray(caption, img.captions)== -1) { 
+           img.captions.push(caption);
+        }
+    })
+                      
+    allImages[key]=img;
+
+}
