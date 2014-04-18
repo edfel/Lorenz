@@ -1,0 +1,96 @@
+<html>
+<head>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+	<style TYPE="text/css">
+        body {}
+		.bigTable {
+			background-color:#EEE;
+			margin:10px;
+			
+		}
+		.choice {
+			min-width: 180px;
+			background-color:#DDD;
+			margin:5px;
+			padding:5px;
+			font-family: xkcd-Regular;
+			font-size: 15px;
+			color:black;
+		}
+		.choice a {
+			text-decoration:none;
+		}
+		.choice a:visited {
+			text-decoration:none;
+			background-color:#EEE;
+		}
+		a:link {color:#000;}      /* unvisited link */
+		a:visited {color:#222;}  /* visited link */
+		a:hover {color:#222;}  /* mouse over link */
+		a:active {color:#222;}  /* selected link */
+
+		td {		 
+			border: 1px 1px 0px 0px solid black;
+		}
+	</style>
+</head>
+<body>
+	<script type="text/javascript">
+
+		$(function(){ 
+		
+			$("#data").val(localStorage.tracks);
+			
+			document.getElementById('click_me').onclick = 
+			function () { 
+				data=$("#data").val();
+				localStorage.tracks=data;
+				tracks=JSON.parse(data); 
+				 
+				var table = $('<table></table>').addClass('bigTable');
+			/*	var row = $('<th></th>');
+				var cell = $('<td></td>').text("Depth");
+				row.append(cell);
+				cell = $('<td></td>').text("Story");
+				row.append(cell);	
+				*/	
+				for(i=0; i<tracks.length; i++){
+					var t=tracks[i];
+					var row = $('<tr></tr>').addClass('track')
+					//.text('track ' + i+' depth:'+t.depth);
+					
+					var cell = $('<td></td>').addClass('count');
+					cell.text(t.depth);
+					row.append(cell);
+					for(j=0; j<t.choices.length; j++){
+						var choice=t.choices[j];
+						if (choice !=">") {
+							var href=t.permalink[j];
+							var cellContent=choice;
+							var cell = $('<td></td>').addClass('choice');
+							if (href !="") {
+								var link= $('<a></a>').attr("href","http://www.xkcd.com"+href).text(choice);
+								cell.append(link)
+							}  else {					
+								cell.text(choice);
+							}
+							row.append(cell);
+						}
+					}			
+					table.append(row);
+				}	
+
+				$('#tableContainer').empty().append(table);
+			};
+		});
+	</script>
+
+	<div>
+		<p> Copy your export data here. Then, <a href="#" id="click_me">Click Me!</a> </p>
+		<textarea id="data" rows=20 cols=80>
+		</textarea>
+	</div>
+
+	<div id="tableContainer"></div>
+</body>
+</html>
